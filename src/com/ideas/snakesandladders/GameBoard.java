@@ -1,10 +1,10 @@
-package com.ideas.snakesandladders.bl;
+package com.ideas.snakesandladders;
 
-import com.ideas.snakesandladders.Constants;
-import com.ideas.snakesandladders.player.Player;
-
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 /**
  * Business Logic implementation for the Snakes and Ladder Game
@@ -17,8 +17,6 @@ public class GameBoard {
 	private Map<Integer, Integer> ladders;
 	private Map<Integer, Integer> snakes;
 
-	private int player1CurrentPos = 0, player2CurrentPos = 0;
-
 /**
  * Constructor will initialize the Snakes and Ladders map
  */
@@ -30,43 +28,30 @@ public class GameBoard {
 		printLaddersAndSnakesPositions();
 	}
 
-/**
- * Move the positions of the Players
- *
- * @param player1
- * @param player2
- * @return true, if there is a Winner
- * false, if it is only position change for the Player/s
- */
-	public boolean move(Player player1, Player player2) {
+	public boolean move(int numberOfPlayers, Scanner scanner) {
+		List<Player> players = generatePlayers(numberOfPlayers);
 
-		int player1DiceVal = player1.getUserInput();
+		while (true) {
+			for (int i = 0; i < numberOfPlayers; i++) {
+				Player player = players.get(i);
 
-		printMessage("Player1 current position : " + player1CurrentPos);
-		printMessage("Player1 dice value : " + player1DiceVal);
+				printMessage("Player" + (i+1) + "'s current position : " + player.currentPosition);
+				printMessage("Please enter Player"+ (i+1) + "'s dice value :");
 
-		player1CurrentPos = isSnakeOrLadder(player1CurrentPos + player1DiceVal);
+				int playerDiceVal = getValidInput(scanner);
 
-		if (player1CurrentPos == MAXIMUM_POSITIONS) {
-			printMessage("Winner : Player1");
-			return true;
+				int playerCurrentPos = isSnakeOrLadder(player.currentPosition + playerDiceVal);
+
+				if (playerCurrentPos == MAXIMUM_POSITIONS) {
+					printMessage("Winner : Player" + (i+1));
+					return true;
+
+				} else {
+
+					player.setCurrentPosition(getNewPositions(playerCurrentPos, playerDiceVal));
+				}
+			}
 		}
-
-		player1CurrentPos = getNewPositions(player1CurrentPos, player1DiceVal);
-
-		int player2DiceVal = player2.getUserInput();
-		printMessage("Player2 current position : " + player2CurrentPos);
-		printMessage("Player2 dice value : " + player2DiceVal);
-
-		player2CurrentPos = isSnakeOrLadder(player2CurrentPos + player2DiceVal);
-
-		if (player2CurrentPos == MAXIMUM_POSITIONS) {
-			printMessage("Winner : Player2");
-			return true;
-		}
-		player2CurrentPos = getNewPositions(player2CurrentPos, player2DiceVal);
-
-		return false;
 	}
 
 /**
@@ -153,11 +138,53 @@ public class GameBoard {
 		printMessage("");
 	}
 
+	/**
+	 *  Accept only less than 7 int values from users.
+	 *
+	 * @param scanner
+	 * @return user input value
+	 */
+	private int getValidInput(Scanner scanner) {
+
+		while (true) {
+			String input = scanner.nextLine();
+
+			if(input.isEmpty() || !input.matches(Constants.ONLY_NUMBERS)) {
+				System.out.println(Constants.INVALID_DICE_INPUT);
+
+			} else {
+				int val = Integer.parseInt(input);
+
+				if (val > 6) {
+					System.out.println(Constants.INVALID_DICE_INPUT);
+
+				} else {
+					return val;
+				}
+			}
+		}
+	}
+
 /**
  * Just for print purpose. This can be replaced with log4j or logback
  * @param msg
  */
 	private void printMessage (String msg) {
 		System.out.println(msg);
+	}
+
+/**
+ * Generates numbers of players
+ *
+ * @param numberOfPlayers
+ * @return player's list
+ */
+	public List<Player> generatePlayers(int numberOfPlayers){
+		List<Player> players = new ArrayList<>(numberOfPlayers);
+
+		for(int i =0 ; i < numberOfPlayers ; i++) {
+			players.add(new Player());
+		}
+		return players;
 	}
 }
